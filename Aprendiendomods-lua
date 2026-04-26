@@ -1,461 +1,36 @@
--- ========== AIMBOT ==========
--- 1. Silent Aim (disparo invisible sin mover mira)
--- 2. Aimbot normal (apunta automático)
--- 3. Trigger Bot (dispara cuando miras al enemigo)
--- 4. FOV Circle (círculo de área visible)
--- 5. Aim Smoothness (suavidad de apuntado)
--- 6. Target Part (cabeza o cuerpo)
--- 7. Wall Check (solo si está visible)
--- 8. Hold Key (activar con tecla)-- ========== ESP ==========
--- 1. Player ESP (ver jugadores tras paredes)
--- 2. 3D Boxes (cajas alrededor del jugador)
--- 3. Chams (colores brillantes)
--- 4. Names with Distance (nombre y distancia)
--- 5. Skeleton ESP (esqueleto)
--- 6. Team Color (sheriff azul / murderer rojo)
--- 7. Rainbow Effects (colores arcoíris)
--- 8. Tracer Line (línea hacia el enemigo)-- ========== KILL AURA ==========
--- 1. Kill All (matar a todos una vez)
--- 2. Loop Kill All (matar todos repetidamente)
--- 3. Kill Aura Gun (daño automático con arma)
--- 4. Kill Aura Knife (daño automático con cuchillo)
--- 5. Hitbox Expander (agrandar hitbox)
--- 6. Auto Equip Gun (equipar arma sola)
--- 7. Auto Equip Knife (equipar cuchillo solo)
--- 8. Full Screen Kill Aura (sin límite de distancia)-- ========== MOVIMIENTO ==========
--- 1. Speed Boost (velocidad aumentada)
--- 2. Teleport Behind Target (teletrasporte detrás del enemigo)
--- 3. Teleport to Lobby (ir al lobby)
--- 4. Spinbot (girar constantemente)
--- 5. Anti-Aim (dificultar que te apunten)
--- 6. Auto Join (unirse automático a partidas)
--- 7. Noclip / Fly (atravesar paredes/volar)
--- 8. B-Hop (salto automático al correr)-- ========== DEFENSA ==========
--- 1. Godmode (inmortal)
--- 2. Anti Aim (modo defensivo)
--- 3. Auto Heal (curarse solo)
--- 4. Anti-Stun (no te pueden aturdir)
--- 5. Auto Respawn (revivir automático)
--- 6. No Fall Damage (sin daño por caída)
--- 7. Anti-Knockback (no te empujan)-- ========== VISUALES ==========
--- 1. Rainbow Menu (menú con colores arcoíris)
--- 2. Custom Title (título personalizado)
--- 3. Minimize / Maximize (minimizar ventana)
--- 4. Watermark (marca de agua con tu nombre)
--- 5. Notifications (notificaciones al activar)
--- 6. FPS Counter (contador de FPS)
--- 7. Crosshair (mira personalizada)
--- 8. Hitmarker (efecto al pegar)-- ========== EXTRAS ==========
--- 1. Auto Win (ganar automático)
--- 2. Instant Kill (matar al instante)
--- 3. No Recoil (sin retroceso de armas)
--- 4. Infinite Ammo (munición infinita)
--- 5. Fast Reload (recarga rápida)
--- 6. No Spread (disparos perfectamente rectos)
--- 7. Anti-Ban (evitar detección)
--- 8. Keybinds (personalizar teclas)-- Trigger Bot: Dispara automático cuando apuntas a un enemigo
-local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
-local camera = workspace.CurrentCamera
-
-local triggerActive = false
-
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.T then
-        triggerActive = not triggerActive
-        print("Trigger Bot:", triggerActive and "ON" or "OFF")
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.05)
-        if triggerActive then
-            local target = mouse.Target
-            if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
-                -- Dispara
-                game:GetService("ReplicatedStorage").Remotes.Shoot:FireServer()
-            end
-        end
-    end
-end)-- FOV Circle: Muestra círculo del área de aimbot
-local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
-
-local fovCircle = Instance.new("Frame")
-fovCircle.Parent = player.PlayerGui
-fovCircle.Size = UDim2.new(0, 150, 0, 150)
-fovCircle.Position = UDim2.new(0.5, -75, 0.5, -75)
-fovCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-fovCircle.BackgroundTransparency = 0.9
-fovCircle.BorderSizePixel = 2
-
--- Opcional: hacerlo circular
-local corner = Instance.new("UICorner")
-corner.Parent = fovCircle
-corner.CornerRadius = UDim.new(1, 0)-- Seleccionar parte del cuerpo
-local targetPart = "Head" -- "Head" o "HumanoidRootPart"
-
-local function getTargetPart(character)
-    if targetPart == "Head" then
-        return character:FindFirstChild("Head")
-    else
-        return character:FindFirstChild("HumanoidRootPart")
-    end
-end-- Wall Check: Solo apunta si está visible
-local function canSee(target)
-    local origin = camera.CFrame.Position
-    local direction = (target.Position - origin).Unit
-    local raycast = workspace:Raycast(origin, direction * 500)
-    
-    if raycast then
-        local hit = raycast.Instance
-        if hit:IsDescendantOf(target.Parent) then
-            return true
-        end
-    end
-    return false
-end-- Hold Key: Aimbot solo mientras mantienes tecla
-local uis = game:GetService("UserInputService")
-local holdingKey = false
-
-uis.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightControl then
-        holdingKey = true
-    end
-end)
-
-uis.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightControl then
-        holdingKey = false
-    end
-end)
-
--- En el loop del aimbot, usar:
--- if aimbotActive and holdingKey then-- Caja 3D alrededor del jugador
-local function addBox(player)
-    local char = player.Character
-    if not char then return end
-    
-    local box = Instance.new("BoxHandleAdornment")
-    box.Name = "BoxESP"
-    box.Size = Vector3.new(4, 6, 2)
-    box.Color = Color3.fromRGB(255, 0, 0)
-    box.AlwaysOnTop = true
-    box.ZIndex = 10
-    box.Adornee = char:FindFirstChild("HumanoidRootPart")
-    box.Parent = char
-end-- Chams: Colores brillantes en enemigos
-local function addChams(player)
-    local char = player.Character
-    if not char then return end
-    
-    for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            local cham = Instance.new("Highlight")
-            cham.Parent = part
-            cham.FillColor = Color3.fromRGB(0, 255, 0)
-            cham.FillTransparency = 0.3
-            cham.OutlineColor = Color3.fromRGB(0, 0, 0)
-        end
-    end
-end-- Nombre y distancia del jugador
-local function addNameTag(player)
-    local char = player.Character
-    if not char then return end
-    
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "NameESP"
-    billboard.Size = UDim2.new(0, 200, 0, 50)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = char:FindFirstChild("Head")
-    
-    local label = Instance.new("TextLabel")
-    label.Parent = billboard
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextStrokeTransparency = 0.5
-    label.TextSize = 14
-    
-    -- Actualizar distancia
-    task.spawn(function()
-        local localChar = game.Players.LocalPlayer.Character
-        while billboard.Parent do
-            task.wait(0.2)
-            local dist = (localChar.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Magnitude
-            label.Text = player.Name .. " | " .. math.floor(dist) .. "m"
-        end
-    end)
-end-- Efecto arcoíris en ESP
-task.spawn(function()
-    local hue = 0
-    while true do
-        task.wait(0.05)
-        hue = (hue + 0.005) % 1
-        local color = Color3.fromHSV(hue, 1, 1)
-        
-        -- Aplicar a todos los highlights
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("Highlight") and v.Name:find("ESP") then
-                v.FillColor = color
-            end
-        end
-    end
-end)-- Línea desde ti hacia el enemigo
-local function addTracer(player)
-    local line = Instance.new("SelectionBox")
-    line.Name = "Tracer"
-    line.Color3 = Color3.fromRGB(255, 255, 0)
-    line.LineThickness = 2
-    line.Adornee = player.Character:FindFirstChild("HumanoidRootPart")
-    line.Parent = player.Character
-end-- Mata a todos los jugadores una vez
-local function killAll()
-    for _, other in pairs(game.Players:GetPlayers()) do
-        if other ~= game.Players.LocalPlayer then
-            local char = other.Character
-            if char and char:FindFirstChild("Humanoid") then
-                char.Humanoid.Health = 0
-            end
-        end
-    end
-end
-
--- Botón para activar
-local btn = Instance.new("TextButton")
-btn.Parent = player.PlayerGui
-btn.Text = "💀 Kill All"
-btn.MouseButton1Click:Connect(killAll)-- Mata repetidamente a todos
-local loopKill = false
-
-local function startLoopKill()
-    loopKill = true
-    task.spawn(function()
-        while loopKill do
-            task.wait(0.5)
-            for _, other in pairs(game.Players:GetPlayers()) do
-                if other ~= game.Players.LocalPlayer then
-                    local char = other.Character
-                    if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-                        char.Humanoid.Health = 0
-                    end
-                end
-            end
-        end
-    end)
-end-- Daño automático con arma a enemigos cercanos
-local killAuraActive = false
-local radius = 30
-
-local function startKillAura()
-    killAuraActive = true
-    task.spawn(function()
-        while killAuraActive do
-            task.wait(0.1)
-            local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-            
-            for _, other in pairs(game.Players:GetPlayers()) do
-                if other ~= game.Players.LocalPlayer then
-                    local char = other.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        local dist = (root.Position - char.HumanoidRootPart.Position).Magnitude
-                        if dist < radius then
-                            -- Disparar
-                            local args = {[1] = char.HumanoidRootPart.Position}
-                            game:GetService("ReplicatedStorage").Remotes.Shoot:FireServer(unpack(args))
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end-- Daño automático con cuchillo
-local knifeAuraActive = false
-
-local function startKnifeAura()
-    knifeAuraActive = true
-    task.spawn(function()
-        while knifeAuraActive do
-            task.wait(0.3)
-            local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-            
-            for _, other in pairs(game.Players:GetPlayers()) do
-                if other ~= game.Players.LocalPlayer then
-                    local char = other.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        local dist = (root.Position - char.HumanoidRootPart.Position).Magnitude
-                        if dist < 8 then -- Distancia de cuchillo
-                            game:GetService("ReplicatedStorage").Remotes.Stab:FireServer(char.HumanoidRootPart)
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end-- Expande las hitboxes de los enemigos
-local function expandHitbox(player)
-    local char = player.Character
-    if not char then return end
-    
-    for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Size = part.Size * 2
-        end
-    end
-end-- Colores arcoíris en el menú
-task.spawn(function()
-    local hue = 0
-    while true do
-        task.wait(0.05)
-        hue = (hue + 0.01) % 1
-        local color = Color3.fromHSV(hue, 1, 0.7)
-        
-        for _, v in pairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
-            if v:IsA("Frame") or v:IsA("TextButton") then
-                v.BackgroundColor3 = color
-            end
-        end
-    end
-end)-- Título en la barra superior
-local title = Instance.new("TextLabel")
-title.Parent = game.Players.LocalPlayer.PlayerGui
-title.Size = UDim2.new(0, 300, 0, 35)
-title.Position = UDim2.new(0.5, -150, 0, 0)
-title.Text = "🦑 ABRAHAM HUB 🦑"
-title.TextColor3 = Color3.fromRGB(255, 100, 150)
-title.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-title.TextSize = 18-- Botón para minimizar menú
-local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Parent = frame
-minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-minimizeBtn.Position = UDim2.new(0, 270, 0, 5)
-minimizeBtn.Text = "▼"
-
-local minimized = false
-minimizeBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    frame.Visible = not minimized
-    minimizeBtn.Text = minimized and "▲" or "▼"
-end)-- Marca de agua con tu nombre
-local watermark = Instance.new("TextLabel")
-watermark.Parent = game.Players.LocalPlayer.PlayerGui
-watermark.Size = UDim2.new(0, 200, 0, 20)
-watermark.Position = UDim2.new(0, 10, 1, -30)
-watermark.Text = "@abraham_etts | SQUiD HUB"
-watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
-watermark.BackgroundTransparency = 1
-watermark.TextSize = 12-- Notificaciones al activar funciones
-local function notify(title, text)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = 2
-    })
-end
-
--- Uso: notify("Godmode", "Activado")-- Mira personalizada
-local crosshair = Instance.new("Frame")
-crosshair.Parent = game.Players.LocalPlayer.PlayerGui
-crosshair.Size = UDim2.new(0, 10, 0, 10)
-crosshair.Position = UDim2.new(0.5, -5, 0.5, -5)
-crosshair.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-crosshair.BorderSizePixel = 0
-
-local lineH = Instance.new("Frame")
-lineH.Parent = crosshair
-lineH.Size = UDim2.new(0, 30, 0, 2)
-lineH.Position = UDim2.new(0.5, -15, 0.5, -1)
-lineH.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-
-local lineV = Instance.new("Frame")
-lineV.Parent = crosshair
-lineV.Size = UDim2.new(0, 2, 0, 30)
-lineV.Position = UDim2.new(0.5, -1, 0.5, -15)
-lineV.BackgroundColor3 = Color3.fromRGB(255, 255, 255)-- Contador de FPS
-local fpsLabel = Instance.new("TextLabel")
-fpsLabel.Parent = game.Players.LocalPlayer.PlayerGui
-fpsLabel.Size = UDim2.new(0, 60, 0, 20)
-fpsLabel.Position = UDim2.new(1, -70, 0, 10)
-fpsLabel.BackgroundTransparency = 1
-fpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-fpsLabel.TextSize = 12
-
-local lastTime = tick()
-local frames = 0
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    frames = frames + 1
-    if tick() - lastTime >= 1 then
-        fpsLabel.Text = "FPS: " .. frames
-        frames = 0
-        lastTime = tick()
-    end
-end)-- Victoria automática
-local autoWinActive = false
-
-local function startAutoWin()
-    autoWinActive = true
-    task.spawn(function()
-        while autoWinActive do
-            task.wait(0.3)
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v.Name:lower():find("win") or v.Name:lower():find("finish") then
-                    local cd = v:FindFirstChild("ClickDetector")
-                    if cd then fireclickdetector(cd) end
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v:GetPivot()
-                end
-            end
-        end
-    end)
-end--[[
-    ╔══════════════════════════════════════════════════════════════════════════════╗
-    ║                                                                              ║
-    ║     🦑 ABRAHAM HUB - MURDERERS VS SHERIFFS DUELS 🦑                           ║
-    ║                                                                              ║
-    ║     Versión: 3.0 - MENÚ PROFESIONAL                                          ║
-    ║     Creado por: @abraham_etts                                                ║
-    ║     Instagram: @abraham_etts                                                 ║
-    ║                                                                              ║
-    ╚══════════════════════════════════════════════════════════════════════════════╝
+--[[
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║     🦑 ABRAHAM HUB - MURDERERS VS SHERIFFS 🦑                     ║
+    ║     Versión: 3.0 - COMPLETO                                      ║
+    ║     Creado por: @abraham_etts                                    ║
+    ║     Instagram: @abraham_etts                                     ║
+    ╚══════════════════════════════════════════════════════════════════╝
 --]]
 
--- ========== CONFIGURACIÓN INICIAL ==========
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
-local mouse = player:GetMouse()
 local camera = workspace.CurrentCamera
 local uis = game:GetService("UserInputService")
 local rs = game:GetService("RunService")
 
--- ========== VARIABLES GLOBALES ==========
-local bodyVel = nil
-local espObjects = {}
-local currentTarget = nil
-
--- Estados de las funciones
-local aimbotActive = false
-local silentAimActive = false
-local triggerBotActive = false
-local killAuraActive = false
+-- ========== ESTADOS ==========
+local godmodeActive = false
 local speedActive = false
 local flyActive = false
-local godmodeActive = false
+local killAuraActive = false
 local espActive = false
 local autoWinActive = false
-local noRecoilActive = false
-local infiniteAmmoActive = false
 local spinbotActive = false
-local bhopActive = false
-local antiStunActive = false
-local noFallActive = false
-local antiBanActive = false
+local bodyVel = nil
 
--- ========== FUNCIONES PRINCIPALES ==========
+-- ========== NOTIFICACIONES ==========
+local function notify(title, text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = text, Duration = 2})
+end
 
--- Godmode
+-- ========== FUNCIONES ==========
 local function toggleGodmode()
     godmodeActive = not godmodeActive
     if godmodeActive then
@@ -466,72 +41,50 @@ local function toggleGodmode()
                 humanoid.BreakJointsOnDeath = false
             end
         end)
-        notify("✨ Godmode", "Activado")
+        notify("✨ Godmode", "ON")
     else
         humanoid.BreakJointsOnDeath = true
-        notify("✨ Godmode", "Desactivado")
+        notify("✨ Godmode", "OFF")
     end
 end
 
--- Velocidad
 local function toggleSpeed()
     speedActive = not speedActive
-    if speedActive then
-        humanoid.WalkSpeed = 32
-        notify("⚡ Velocidad x2", "Activada")
-    else
-        humanoid.WalkSpeed = 16
-        notify("⚡ Velocidad normal", "Restaurada")
-    end
+    humanoid.WalkSpeed = speedActive and 32 or 16
+    notify("⚡ Velocidad", speedActive and "x2" or "Normal")
 end
 
--- Fly/Noclip
 local function toggleFly()
     flyActive = not flyActive
     if flyActive then
         bodyVel = Instance.new("BodyVelocity")
         bodyVel.MaxForce = Vector3.new(100000, 100000, 100000)
         bodyVel.Parent = rootPart
-        
         for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
+            if part:IsA("BasePart") then part.CanCollide = false end
         end
-        
-        local flyConnection
-        flyConnection = rs.RenderStepped:Connect(function()
-            if not flyActive then
-                flyConnection:Disconnect()
-                return
-            end
-            local moveDir = Vector3.new()
-            if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Vector3.new(0, 0, -1) end
-            if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + Vector3.new(0, 0, 1) end
-            if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + Vector3.new(-1, 0, 0) end
-            if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Vector3.new(1, 0, 0) end
-            if uis:IsKeyDown(Enum.KeyCode.Q) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-            if uis:IsKeyDown(Enum.KeyCode.E) then moveDir = moveDir + Vector3.new(0, -1, 0) end
-            
-            if moveDir.Magnitude > 0 then
-                bodyVel.Velocity = rootPart.CFrame:VectorToWorldSpace(moveDir.Unit * 150)
-            else
-                bodyVel.Velocity = Vector3.new(0, 0, 0)
-            end
+        local conn
+        conn = rs.RenderStepped:Connect(function()
+            if not flyActive then conn:Disconnect() return end
+            local move = Vector3.new()
+            if uis:IsKeyDown(Enum.KeyCode.W) then move = move + Vector3.new(0,0,-1) end
+            if uis:IsKeyDown(Enum.KeyCode.S) then move = move + Vector3.new(0,0,1) end
+            if uis:IsKeyDown(Enum.KeyCode.A) then move = move + Vector3.new(-1,0,0) end
+            if uis:IsKeyDown(Enum.KeyCode.D) then move = move + Vector3.new(1,0,0) end
+            if uis:IsKeyDown(Enum.KeyCode.Q) then move = move + Vector3.new(0,1,0) end
+            if uis:IsKeyDown(Enum.KeyCode.E) then move = move + Vector3.new(0,-1,0) end
+            bodyVel.Velocity = move.Magnitude > 0 and rootPart.CFrame:VectorToWorldSpace(move.Unit * 150) or Vector3.new(0,0,0)
         end)
-        notify("🕊️ Fly", "Activado - Usa WASD + Q/E")
+        notify("🕊️ Fly", "ON")
     else
         if bodyVel then bodyVel:Destroy() end
         for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
+            if part:IsA("BasePart") then part.CanCollide = true end
         end
-        notify("🕊️ Fly", "Desactivado")
+        notify("🕊️ Fly", "OFF")
     end
 end
 
--- Kill Aura
 local function toggleKillAura()
     killAuraActive = not killAuraActive
     if killAuraActive then
@@ -540,42 +93,55 @@ local function toggleKillAura()
                 task.wait(0.2)
                 for _, other in pairs(game.Players:GetPlayers()) do
                     if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                        local targetRoot = other.Character.HumanoidRootPart
-                        local dist = (rootPart.Position - targetRoot.Position).Magnitude
-                        if dist < 30 then
-                            rootPart.CFrame = targetRoot.CFrame
-                            task.wait(0.05)
-                            -- Simular ataque
-                            local args = {[1] = targetRoot.Position}
-                            local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
-                            if remote and remote:FindFirstChild("Shoot") then
-                                remote.Shoot:FireServer(unpack(args))
-                            end
+                        local target = other.Character.HumanoidRootPart
+                        if (rootPart.Position - target.Position).Magnitude < 30 then
+                            rootPart.CFrame = target.CFrame
                         end
                     end
                 end
             end
         end)
-        notify("⚔️ Kill Aura", "Activada")
+        notify("⚔️ Kill Aura", "ON")
     else
-        notify("⚔️ Kill Aura", "Desactivada")
+        notify("⚔️ Kill Aura", "OFF")
     end
 end
 
--- Kill All
 local function killAll()
     for _, other in pairs(game.Players:GetPlayers()) do
-        if other ~= player then
-            local char = other.Character
-            if char and char:FindFirstChild("Humanoid") then
-                char.Humanoid.Health = 0
-            end
+        if other ~= player and other.Character and other.Character:FindFirstChild("Humanoid") then
+            other.Character.Humanoid.Health = 0
         end
     end
-    notify("💀 Kill All", "Todos los enemigos eliminados")
+    notify("💀 Kill All", "Todos eliminados")
 end
 
--- Auto Win
+local function toggleESP()
+    espActive = not espActive
+    if espActive then
+        task.spawn(function()
+            while espActive do
+                task.wait(0.5)
+                for _, other in pairs(game.Players:GetPlayers()) do
+                    if other ~= player and other.Character and not other.Character:FindFirstChild("ESP_Highlight") then
+                        local hl = Instance.new("Highlight")
+                        hl.Name = "ESP_Highlight"
+                        hl.FillColor = Color3.fromRGB(255,0,0)
+                        hl.FillTransparency = 0.5
+                        hl.Parent = other.Character
+                    end
+                end
+            end
+        end)
+        notify("👁️ ESP", "ON")
+    else
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v.Name == "ESP_Highlight" then v:Destroy() end
+        end
+        notify("👁️ ESP", "OFF")
+    end
+end
+
 local function toggleAutoWin()
     autoWinActive = not autoWinActive
     if autoWinActive then
@@ -584,7 +150,7 @@ local function toggleAutoWin()
                 task.wait(0.3)
                 for _, v in pairs(workspace:GetDescendants()) do
                     local name = v.Name:lower()
-                    if name:find("win") or name:find("finish") or name:find("goal") then
+                    if name:find("win") or name:find("finish") then
                         local cd = v:FindFirstChild("ClickDetector")
                         if cd then fireclickdetector(cd) end
                         rootPart.CFrame = v:GetPivot()
@@ -592,69 +158,12 @@ local function toggleAutoWin()
                 end
             end
         end)
-        notify("🏆 Auto Win", "Activado")
+        notify("🏆 Auto Win", "ON")
     else
-        notify("🏆 Auto Win", "Desactivado")
+        notify("🏆 Auto Win", "OFF")
     end
 end
 
--- ESP
-local function toggleESP()
-    espActive = not espActive
-    if espActive then
-        task.spawn(function()
-            while espActive do
-                task.wait(0.5)
-                for _, other in pairs(game.Players:GetPlayers()) do
-                    if other ~= player and other.Character then
-                        local char = other.Character
-                        if not char:FindFirstChild("ESP_Highlight") then
-                            local hl = Instance.new("Highlight")
-                            hl.Name = "ESP_Highlight"
-                            hl.FillColor = other.Team and other.Team.Name == "Sheriffs" and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0)
-                            hl.FillTransparency = 0.5
-                            hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                            hl.Parent = char
-                            
-                            -- Nombre y distancia
-                            local bill = Instance.new("BillboardGui")
-                            bill.Name = "ESP_Name"
-                            bill.Size = UDim2.new(0, 200, 0, 30)
-                            bill.AlwaysOnTop = true
-                            bill.Parent = char:FindFirstChild("Head") or char.HumanoidRootPart
-                            
-                            local label = Instance.new("TextLabel")
-                            label.Parent = bill
-                            label.Size = UDim2.new(1, 0, 1, 0)
-                            label.BackgroundTransparency = 1
-                            label.TextColor3 = Color3.fromRGB(255, 255, 255)
-                            label.TextStrokeTransparency = 0.3
-                            label.TextSize = 12
-                            
-                            task.spawn(function()
-                                while bill.Parent do
-                                    task.wait(0.2)
-                                    local dist = (rootPart.Position - char.HumanoidRootPart.Position).Magnitude
-                                    label.Text = other.Name .. " | " .. math.floor(dist) .. "m"
-                                end
-                            end)
-                        end
-                    end
-                end
-            end
-        end)
-        notify("👁️ ESP", "Activado")
-    else
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v.Name == "ESP_Highlight" or v.Name == "ESP_Name" then
-                v:Destroy()
-            end
-        end
-        notify("👁️ ESP", "Desactivado")
-    end
-end
-
--- Spinbot
 local function toggleSpinbot()
     spinbotActive = not spinbotActive
     if spinbotActive then
@@ -664,330 +173,163 @@ local function toggleSpinbot()
                 rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(100), 0)
             end
         end)
-        notify("🔄 Spinbot", "Activado")
+        notify("🔄 Spinbot", "ON")
     else
-        notify("🔄 Spinbot", "Desactivado")
+        notify("🔄 Spinbot", "OFF")
     end
 end
 
--- B-Hop
-local function toggleBHop()
-    bhopActive = not bhopActive
-    if bhopActive then
-        task.spawn(function()
-            while bhopActive do
-                task.wait(0.05)
-                if humanoid.MoveDirection.Magnitude > 0 and humanoid.FloorMaterial ~= Enum.Material.Air then
-                    humanoid.Jump = true
-                end
-            end
-        end)
-        notify("🦘 B-Hop", "Activado")
-    else
-        notify("🦘 B-Hop", "Desactivado")
-    end
-end
-
--- Anti Stun
-local function toggleAntiStun()
-    antiStunActive = not antiStunActive
-    if antiStunActive then
-        task.spawn(function()
-            while antiStunActive do
-                task.wait(0.1)
-                humanoid.PlatformStand = false
-                humanoid.Sit = false
-            end
-        end)
-        notify("⛔ Anti Stun", "Activado")
-    else
-        notify("⛔ Anti Stun", "Desactivado")
-    end
-end
-
--- No Fall Damage
-local function toggleNoFall()
-    noFallActive = not noFallActive
-    if noFallActive then
-        task.spawn(function()
-            while noFallActive do
-                task.wait(0.1)
-                humanoid.UseJumpPower = true
-            end
-        end)
-        notify("🪶 No Fall Damage", "Activado")
-    else
-        notify("🪶 No Fall Damage", "Desactivado")
-    end
-end
-
--- No Recoil
-local function toggleNoRecoil()
-    noRecoilActive = not noRecoilActive
-    if noRecoilActive then
-        task.spawn(function()
-            while noRecoilActive do
-                task.wait(0.05)
-                camera.CFrame = camera.CFrame
-            end
-        end)
-        notify("🔫 No Recoil", "Activado")
-    else
-        notify("🔫 No Recoil", "Desactivado")
-    end
-end
-
--- Anti Ban
-local function toggleAntiBan()
-    antiBanActive = not antiBanActive
-    if antiBanActive then
-        task.spawn(function()
-            while antiBanActive do
-                task.wait(5)
-                local anti = game:GetService("ReplicatedStorage"):FindFirstChild("AntiCheat")
-                if anti then anti:Destroy() end
-            end
-        end)
-        notify("🛡️ Anti Ban", "Activado")
-    else
-        notify("🛡️ Anti Ban", "Desactivado")
-    end
-end
-
--- Teletransporte a meta
 local function teleportToWin()
     for _, v in pairs(workspace:GetDescendants()) do
         local name = v.Name:lower()
-        if name:find("win") or name:find("finish") or name:find("goal") then
+        if name:find("win") or name:find("finish") then
             rootPart.CFrame = v:GetPivot()
-            notify("🏁 Teletransporte", "Llegaste a la meta")
+            notify("🏁 Teleport", "Meta")
             break
         end
     end
 end
 
--- Teletransporte al lobby
-local function teleportToLobby()
-    for _, v in pairs(workspace:GetDescendants()) do
-        local name = v.Name:lower()
-        if name:find("lobby") or name:find("spawn") then
-            rootPart.CFrame = v:GetPivot()
-            notify("🏠 Teletransporte", "Llegaste al lobby")
-            break
-        end
+-- ========== GUI ==========
+local gui = Instance.new("ScreenGui")
+gui.Name = "AbrahamHub"
+gui.Parent = player.PlayerGui
+
+local bar = Instance.new("Frame")
+bar.Parent = gui
+bar.Size = UDim2.new(0, 350, 0, 35)
+bar.Position = UDim2.new(0.5, -175, 0.2, 0)
+bar.BackgroundColor3 = Color3.fromRGB(15, 10, 35)
+
+local title = Instance.new("TextLabel")
+title.Parent = bar
+title.Size = UDim2.new(0, 250, 0, 35)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.Text = "🦑 ABRAHAM HUB"
+title.TextColor3 = Color3.fromRGB(255, 100, 150)
+title.BackgroundTransparency = 1
+
+local insta = Instance.new("TextLabel")
+insta.Parent = bar
+insta.Size = UDim2.new(0, 80, 0, 35)
+insta.Position = UDim2.new(0, 260, 0, 0)
+insta.Text = "@abraham_etts"
+insta.TextColor3 = Color3.fromRGB(255, 180, 100)
+insta.BackgroundTransparency = 1
+insta.TextSize = 11
+
+local minBtn = Instance.new("TextButton")
+minBtn.Parent = bar
+minBtn.Size = UDim2.new(0, 30, 0, 31)
+minBtn.Position = UDim2.new(0, 315, 0, 2)
+minBtn.Text = "▼"
+minBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 90)
+
+local menu = Instance.new("Frame")
+menu.Parent = gui
+menu.Size = UDim2.new(0, 350, 0, 420)
+menu.Position = UDim2.new(0.5, -175, 0.2, 35)
+menu.BackgroundColor3 = Color3.fromRGB(10, 8, 25)
+menu.BackgroundTransparency = 0.05
+
+-- Arrastrar
+local dragging = false
+local dragStart = nil
+local startBarPos = nil
+local startMenuPos = nil
+
+bar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startBarPos = bar.Position
+        startMenuPos = menu.Position
     end
-end
+end)
 
--- Notificaciones
-local function notify(title, text)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = 2
-    })
-end
+bar.InputEnded:Connect(function()
+    dragging = false
+end)
 
--- ========== CREAR GUI ==========
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AbrahamHub"
-screenGui.Parent = player.PlayerGui
-screenGui.ResetOnSpawn = false
+uis.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        bar.Position = UDim2.new(startBarPos.X.Scale, startBarPos.X.Offset + delta.X, startBarPos.Y.Scale, startBarPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(startMenuPos.X.Scale, startMenuPos.X.Offset + delta.X, startMenuPos.Y.Scale, startMenuPos.Y.Offset + delta.Y)
+    end
+end)
 
--- Barra superior (siempre visible)
-local topBar = Instance.new("Frame")
-topBar.Parent = screenGui
-topBar.Size = UDim2.new(0, 450, 0, 40)
-topBar.Position = UDim2.new(0.5, -225, 0, 0)
-topBar.BackgroundColor3 = Color3.fromRGB(15, 10, 35)
-topBar.BorderSizePixel = 0
-
-local barGradient = Instance.new("UIGradient")
-barGradient.Parent = topBar
-barGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 60, 120)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 50, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 100, 255))
-})
-
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Parent = topBar
-titleLabel.Size = UDim2.new(0, 300, 0, 40)
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
-titleLabel.Text = "🦑 ABRAHAM HUB | MURDERERS VS SHERIFFS"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.BackgroundTransparency = 1
-titleLabel.TextSize = 14
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local instaText = Instance.new("TextLabel")
-instaText.Parent = topBar
-instaText.Size = UDim2.new(0, 120, 0, 40)
-instaText.Position = UDim2.new(0, 330, 0, 0)
-instaText.Text = "📷 @abraham_etts"
-instaText.TextColor3 = Color3.fromRGB(255, 180, 100)
-instaText.BackgroundTransparency = 1
-instaText.TextSize = 11
-instaText.TextXAlignment = Enum.TextXAlignment.Right
-
-local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Parent = topBar
-minimizeBtn.Size = UDim2.new(0, 35, 0, 36)
-minimizeBtn.Position = UDim2.new(0, 410, 0, 2)
-minimizeBtn.Text = "▼"
-minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 90)
-minimizeBtn.BorderSizePixel = 0
-
--- Menú principal
-local mainMenu = Instance.new("Frame")
-mainMenu.Parent = screenGui
-mainMenu.Size = UDim2.new(0, 480, 0, 460)
-mainMenu.Position = UDim2.new(0.5, -240, 0, 40)
-mainMenu.BackgroundColor3 = Color3.fromRGB(10, 8, 25)
-mainMenu.BackgroundTransparency = 0.05
-mainMenu.BorderSizePixel = 0
-
-local menuCorner = Instance.new("UICorner")
-menuCorner.Parent = mainMenu
-menuCorner.CornerRadius = UDim.new(0, 12)
-
--- Pestañas
-local tabBar = Instance.new("Frame")
-tabBar.Parent = mainMenu
-tabBar.Size = UDim2.new(0, 480, 0, 38)
-tabBar.Position = UDim2.new(0, 0, 0, 0)
-tabBar.BackgroundColor3 = Color3.fromRGB(20, 15, 45)
-tabBar.BackgroundTransparency = 0.3
-tabBar.BorderSizePixel = 0
-
-local contentArea = Instance.new("Frame")
-contentArea.Parent = mainMenu
-contentArea.Size = UDim2.new(0, 480, 0, 418)
-contentArea.Position = UDim2.new(0, 0, 0, 42)
-contentArea.BackgroundTransparency = 1
-
-local tabs = {}
-
-local function createTab(name, icon)
-    local tabBtn = Instance.new("TextButton")
-    tabBtn.Parent = tabBar
-    tabBtn.Size = UDim2.new(0, 80, 0, 38)
-    tabBtn.Position = UDim2.new(0, (#tabs) * 80, 0, 0)
-    tabBtn.Text = icon .. " " .. name
-    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tabBtn.BackgroundColor3 = Color3.fromRGB(20, 15, 45)
-    tabBtn.BorderSizePixel = 0
-    tabBtn.TextSize = 11
-    
-    local tabContent = Instance.new("ScrollingFrame")
-    tabContent.Parent = contentArea
-    tabContent.Size = UDim2.new(0, 480, 0, 418)
-    tabContent.Position = UDim2.new(0, 0, 0, 0)
-    tabContent.BackgroundTransparency = 1
-    tabContent.BorderSizePixel = 0
-    tabContent.ScrollBarThickness = 3
-    tabContent.Visible = false
-    tabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = tabContent
-    layout.Padding = UDim.new(0, 5)
-    
-    table.insert(tabs, {btn = tabBtn, content = tabContent})
-    
-    tabBtn.MouseButton1Click:Connect(function()
-        for _, t in pairs(tabs) do
-            t.content.Visible = false
-            t.btn.BackgroundColor3 = Color3.fromRGB(20, 15, 45)
-            t.btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        end
-        tabContent.Visible = true
-        tabBtn.BackgroundColor3 = Color3.fromRGB(80, 50, 140)
-        tabBtn.TextColor3 = Color3.fromRGB(255, 180, 220)
-    end)
-    
-    return tabContent
-end
-
-local function addToggle(parent, text, callback, defaultColor)
+-- Botones
+local function addToggle(text, y, callback)
     local frame = Instance.new("Frame")
-    frame.Parent = parent
-    frame.Size = UDim2.new(0, 440, 0, 38)
-    frame.Position = UDim2.new(0, 20, 0, 0)
+    frame.Parent = menu
+    frame.Size = UDim2.new(0, 310, 0, 38)
+    frame.Position = UDim2.new(0, 20, 0, y)
     frame.BackgroundColor3 = Color3.fromRGB(35, 30, 55)
-    frame.BackgroundTransparency = 0.2
-    frame.BorderSizePixel = 0
-    
-    local corner = Instance.new("UICorner")
-    corner.Parent = frame
-    corner.CornerRadius = UDim.new(0, 8)
     
     local label = Instance.new("TextLabel")
     label.Parent = frame
-    label.Size = UDim2.new(0, 340, 0, 38)
-    label.Position = UDim2.new(0, 15, 0, 0)
+    label.Size = UDim2.new(0, 220, 0, 38)
+    label.Position = UDim2.new(0, 10, 0, 0)
     label.Text = text
     label.TextColor3 = Color3.fromRGB(220, 220, 220)
     label.BackgroundTransparency = 1
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextSize = 13
     
-    local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Parent = frame
-    toggleBtn.Size = UDim2.new(0, 55, 0, 30)
-    toggleBtn.Position = UDim2.new(0, 370, 0, 4)
-    toggleBtn.Text = "OFF"
-    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 140)
-    toggleBtn.BorderSizePixel = 0
-    
-    local corner2 = Instance.new("UICorner")
-    corner2.Parent = toggleBtn
-    corner2.CornerRadius = UDim.new(0, 6)
+    local btn = Instance.new("TextButton")
+    btn.Parent = frame
+    btn.Size = UDim2.new(0, 55, 0, 30)
+    btn.Position = UDim2.new(0, 245, 0, 4)
+    btn.Text = "OFF"
+    btn.BackgroundColor3 = Color3.fromRGB(100, 80, 130)
     
     local state = false
-    toggleBtn.MouseButton1Click:Connect(function()
+    btn.MouseButton1Click:Connect(function()
         state = not state
-        toggleBtn.Text = state and "ON" or "OFF"
-        toggleBtn.BackgroundColor3 = state and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(100, 80, 140)
+        btn.Text = state and "ON" or "OFF"
+        btn.BackgroundColor3 = state and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(100, 80, 130)
         callback(state)
     end)
-    
-    return frame
 end
 
-local function addButton(parent, text, callback, color)
+local function addButton(text, y, color, callback)
     local btn = Instance.new("TextButton")
-    btn.Parent = parent
-    btn.Size = UDim2.new(0, 440, 0, 38)
-    btn.Position = UDim2.new(0, 20, 0, 0)
+    btn.Parent = menu
+    btn.Size = UDim2.new(0, 310, 0, 38)
+    btn.Position = UDim2.new(0, 20, 0, y)
     btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.BackgroundColor3 = color or Color3.fromRGB(55, 45, 85)
-    btn.BackgroundTransparency = 0.2
-    btn.BorderSizePixel = 0
-    
-    local corner = Instance.new("UICorner")
-    corner.Parent = btn
-    corner.CornerRadius = UDim.new(0, 8)
-    
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.MouseButton1Click:Connect(callback)
-    return btn
 end
 
--- ========== CREAR PESTAÑAS ==========
-local combatTab = createTab("COMBATE", "⚔️")
-local movementTab = createTab("MOVIMIENTO", "🏃")
-local visualTab = createTab("VISUALES", "👁️")
-local extrasTab = createTab("EXTRAS", "🔧")
-local teleportTab = createTab("TELEPORT", "🚀")
+addToggle("✨ Godmode", 10, function(s) toggleGodmode() end)
+addToggle("⚡ Velocidad x2", 55, function(s) toggleSpeed() end)
+addToggle("🕊️ Fly / Noclip", 100, function(s) toggleFly() end)
+addToggle("⚔️ Kill Aura", 145, function(s) toggleKillAura() end)
+addToggle("👁️ ESP", 190, function(s) toggleESP() end)
+addToggle("🏆 Auto Win", 235, function(s) toggleAutoWin() end)
+addToggle("🔄 Spinbot", 280, function(s) toggleSpinbot() end)
+addButton("💀 Kill All", 330, Color3.fromRGB(180, 50, 80), killAll)
+addButton("🏁 Teleport a Meta", 375, Color3.fromRGB(50, 150, 100), teleportToWin)
 
--- ========== PESTAÑA COMBATE ==========
-addToggle(combatTab, "✨ Godmode (Inmortal)", function(state)
-    godmodeActive = state
-    if state then
-        task.spawn(function()
-            while godmodeActive do
-                task.wait(0.1)
-                humanoid.Health = humanoid.MaxHealth
-                humanoid.BreakJ
+-- Minimizar
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    menu.Visible = not minimized
+    minBtn.Text = minimized and "▲" or "▼"
+end)
+
+-- Colores animados
+task.spawn(function()
+    local hue = 0
+    while true do
+        task.wait(0.05)
+        hue = (hue + 0.005) % 1
+        title.TextColor3 = Color3.fromHSV(hue, 1, 0.8)
+        insta.TextColor3 = Color3.fromHSV(hue, 1, 0.8)
+    end
+end)
+
+notify("🦑 ABRAHAM HUB", "Script cargado | @abraham_etts")
+print("🦑 ABRAHAM HUB - Cargado")
