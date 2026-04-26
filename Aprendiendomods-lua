@@ -333,3 +333,31 @@ end)
 
 notify("🦑 ABRAHAM HUB", "Script cargado | @abraham_etts")
 print("🦑 ABRAHAM HUB - Cargado")
+-- ========== ARRASTRAR MENÚ (CORREGIDO) ==========
+local dragging = false
+local dragStart = nil
+local startBarPos = nil
+local startMenuPos = nil
+
+bar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startBarPos = bar.Position
+        startMenuPos = menu.Position
+    end
+end)
+
+bar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        bar.Position = UDim2.new(startBarPos.X.Scale, startBarPos.X.Offset + delta.X, startBarPos.Y.Scale, startBarPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(startMenuPos.X.Scale, startMenuPos.X.Offset + delta.X, startMenuPos.Y.Scale, startMenuPos.Y.Offset + delta.Y)
+    end
+end)
