@@ -361,3 +361,338 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
         menu.Position = UDim2.new(startMenuPos.X.Scale, startMenuPos.X.Offset + delta.X, startMenuPos.Y.Scale, startMenuPos.Y.Offset + delta.Y)
     end
 end)
+--[[
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║     🦑 ABRAHAM HUB - MURDERERS VS SHERIFFS 🦑                     ║
+    ║     Versión: 3.2 - MENÚ ARRASTRABLE CORREGIDO                    ║
+    ║     Creado por: @abraham_etts                                    ║
+    ║     Instagram: @abraham_etts                                     ║
+    ╚══════════════════════════════════════════════════════════════════╝
+--]]
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local camera = workspace.CurrentCamera
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+
+-- Estados
+local godmodeActive = false
+local speedActive = false
+local flyActive = false
+local killAuraActive = false
+local espActive = false
+local autoWinActive = false
+local spinbotActive = false
+local bodyVel = nil
+
+-- Notificaciones
+local function notify(title, text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = text, Duration = 2})
+end
+
+-- Funciones
+local function toggleGodmode()
+    godmodeActive = not godmodeActive
+    if godmodeActive then
+        task.spawn(function()
+            while godmodeActive do
+                task.wait(0.1)
+                humanoid.Health = humanoid.MaxHealth
+                humanoid.BreakJointsOnDeath = false
+            end
+        end)
+        notify("✨ Godmode", "ON")
+    else
+        humanoid.BreakJointsOnDeath = true
+        notify("✨ Godmode", "OFF")
+    end
+end
+
+local function toggleSpeed()
+    speedActive = not speedActive
+    humanoid.WalkSpeed = speedActive and 32 or 16
+    notify("⚡ Velocidad", speedActive and "x2" or "Normal")
+end
+
+local function toggleFly()
+    flyActive = not flyActive
+    if flyActive then
+        bodyVel = Instance.new("BodyVelocity")
+        bodyVel.MaxForce = Vector3.new(100000, 100000, 100000)
+        bodyVel.Parent = rootPart
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+        local conn
+        conn = rs.RenderStepped:Connect(function()
+            if not flyActive then conn:Disconnect() return end
+            local move = Vector3.new()
+            if uis:IsKeyDown(Enum.KeyCode.W) then move = move + Vector3.new(0,0,-1) end
+            if uis:IsKeyDown(Enum.KeyCode.S) then move = move + Vector3.new(0,0,1) end
+            if uis:IsKeyDown(Enum.KeyCode.A) then move = move + Vector3.new(-1,0,0) end
+            if uis:IsKeyDown(Enum.KeyCode.D) then move = move + Vector3.new(1,0,0) end
+            if uis:IsKeyDown(Enum.KeyCode.Q) then move = move + Vector3.new(0,1,0) end
+            if uis:IsKeyDown(Enum.KeyCode.E) then move = move + Vector3.new(0,-1,0) end
+            bodyVel.Velocity = move.Magnitude > 0 and rootPart.CFrame:VectorToWorldSpace(move.Unit * 150) or Vector3.new(0,0,0)
+        end)
+        notify("🕊️ Fly", "ON")
+    else
+        if bodyVel then bodyVel:Destroy() end
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = true end
+        end
+        notify("🕊️ Fly", "OFF")
+    end
+end
+
+local function toggleKillAura()
+    killAuraActive = not killAuraActive
+    if killAuraActive then
+        task.spawn(function()
+            while killAuraActive do
+                task.wait(0.2)
+                for _, other in pairs(game.Players:GetPlayers()) do
+                    if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                        local target = other.Character.HumanoidRootPart
+                        if (rootPart.Position - target.Position).Magnitude < 30 then
+                            rootPart.CFrame = target.CFrame
+                        end
+                    end
+                end
+            end
+        end)
+        notify("⚔️ Kill Aura", "ON")
+    else
+        notify("⚔️ Kill Aura", "OFF")
+    end
+end
+
+local function killAll()
+    for _, other in pairs(game.Players:GetPlayers()) do
+        if other ~= player and other.Character and other.Character:FindFirstChild("Humanoid") then
+            other.Character.Humanoid.Health = 0
+        end
+    end
+    notify("💀 Kill All", "Todos eliminados")
+end
+
+local function toggleESP()
+    espActive = not espActive
+    if espActive then
+        task.spawn(function()
+            while espActive do
+                task.wait(0.5)
+                for _, other in pairs(game.Players:GetPlayers()) do
+                    if other ~= player and other.Character and not other.Character:FindFirstChild("ESP_Highlight") then
+                        local hl = Instance.new("Highlight")
+                        hl.Name = "ESP_Highlight"
+                        hl.FillColor = Color3.fromRGB(255,0,0)
+                        hl.FillTransparency = 0.5
+                        hl.Parent = other.Character
+                    end
+                end
+            end
+        end)
+        notify("👁️ ESP", "ON")
+    else
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v.Name == "ESP_Highlight" then v:Destroy() end
+        end
+        notify("👁️ ESP", "OFF")
+    end
+end
+
+local function toggleAutoWin()
+    autoWinActive = not autoWinActive
+    if autoWinActive then
+        task.spawn(function()
+            while autoWinActive do
+                task.wait(0.3)
+                for _, v in pairs(workspace:GetDescendants()) do
+                    local name = v.Name:lower()
+                    if name:find("win") or name:find("finish") then
+                        local cd = v:FindFirstChild("ClickDetector")
+                        if cd then fireclickdetector(cd) end
+                        rootPart.CFrame = v:GetPivot()
+                    end
+                end
+            end
+        end)
+        notify("🏆 Auto Win", "ON")
+    else
+        notify("🏆 Auto Win", "OFF")
+    end
+end
+
+local function toggleSpinbot()
+    spinbotActive = not spinbotActive
+    if spinbotActive then
+        task.spawn(function()
+            while spinbotActive do
+                task.wait()
+                rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(100), 0)
+            end
+        end)
+        notify("🔄 Spinbot", "ON")
+    else
+        notify("🔄 Spinbot", "OFF")
+    end
+end
+
+local function teleportToWin()
+    for _, v in pairs(workspace:GetDescendants()) do
+        local name = v.Name:lower()
+        if name:find("win") or name:find("finish") then
+            rootPart.CFrame = v:GetPivot()
+            notify("🏁 Teleport", "Meta")
+            break
+        end
+    end
+end
+
+-- ========== GUI ==========
+local gui = Instance.new("ScreenGui")
+gui.Name = "AbrahamHub"
+gui.Parent = player.PlayerGui
+
+local bar = Instance.new("Frame")
+bar.Parent = gui
+bar.Size = UDim2.new(0, 350, 0, 35)
+bar.Position = UDim2.new(0.5, -175, 0.2, 0)
+bar.BackgroundColor3 = Color3.fromRGB(15, 10, 35)
+
+local title = Instance.new("TextLabel")
+title.Parent = bar
+title.Size = UDim2.new(0, 250, 0, 35)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.Text = "🦑 ABRAHAM HUB"
+title.TextColor3 = Color3.fromRGB(255, 100, 150)
+title.BackgroundTransparency = 1
+
+local insta = Instance.new("TextLabel")
+insta.Parent = bar
+insta.Size = UDim2.new(0, 80, 0, 35)
+insta.Position = UDim2.new(0, 260, 0, 0)
+insta.Text = "@abraham_etts"
+insta.TextColor3 = Color3.fromRGB(255, 180, 100)
+insta.BackgroundTransparency = 1
+insta.TextSize = 11
+
+local minBtn = Instance.new("TextButton")
+minBtn.Parent = bar
+minBtn.Size = UDim2.new(0, 30, 0, 31)
+minBtn.Position = UDim2.new(0, 315, 0, 2)
+minBtn.Text = "▼"
+minBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 90)
+
+local menu = Instance.new("Frame")
+menu.Parent = gui
+menu.Size = UDim2.new(0, 350, 0, 420)
+menu.Position = UDim2.new(0.5, -175, 0.2, 35)
+menu.BackgroundColor3 = Color3.fromRGB(10, 8, 25)
+menu.BackgroundTransparency = 0.05
+
+-- ========== ARRASTRAR CORREGIDO ==========
+local dragging = false
+local dragStart = nil
+local startBarPos = nil
+local startMenuPos = nil
+
+bar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startBarPos = bar.Position
+        startMenuPos = menu.Position
+    end
+end)
+
+bar.InputEnded:Connect(function()
+    dragging = false
+end)
+
+uis.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        bar.Position = UDim2.new(startBarPos.X.Scale, startBarPos.X.Offset + delta.X, startBarPos.Y.Scale, startBarPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(startMenuPos.X.Scale, startMenuPos.X.Offset + delta.X, startMenuPos.Y.Scale, startMenuPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Botones
+local function addToggle(text, y, callback)
+    local frame = Instance.new("Frame")
+    frame.Parent = menu
+    frame.Size = UDim2.new(0, 310, 0, 38)
+    frame.Position = UDim2.new(0, 20, 0, y)
+    frame.BackgroundColor3 = Color3.fromRGB(35, 30, 55)
+    
+    local label = Instance.new("TextLabel")
+    label.Parent = frame
+    label.Size = UDim2.new(0, 220, 0, 38)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.BackgroundTransparency = 1
+    
+    local btn = Instance.new("TextButton")
+    btn.Parent = frame
+    btn.Size = UDim2.new(0, 55, 0, 30)
+    btn.Position = UDim2.new(0, 245, 0, 4)
+    btn.Text = "OFF"
+    btn.BackgroundColor3 = Color3.fromRGB(100, 80, 130)
+    
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.Text = state and "ON" or "OFF"
+        btn.BackgroundColor3 = state and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(100, 80, 130)
+        callback(state)
+    end)
+end
+
+local function addButton(text, y, color, callback)
+    local btn = Instance.new("TextButton")
+    btn.Parent = menu
+    btn.Size = UDim2.new(0, 310, 0, 38)
+    btn.Position = UDim2.new(0, 20, 0, y)
+    btn.Text = text
+    btn.BackgroundColor3 = color or Color3.fromRGB(55, 45, 85)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+addToggle("✨ Godmode", 10, function(s) toggleGodmode() end)
+addToggle("⚡ Velocidad x2", 55, function(s) toggleSpeed() end)
+addToggle("🕊️ Fly / Noclip", 100, function(s) toggleFly() end)
+addToggle("⚔️ Kill Aura", 145, function(s) toggleKillAura() end)
+addToggle("👁️ ESP", 190, function(s) toggleESP() end)
+addToggle("🏆 Auto Win", 235, function(s) toggleAutoWin() end)
+addToggle("🔄 Spinbot", 280, function(s) toggleSpinbot() end)
+addButton("💀 Kill All", 330, Color3.fromRGB(180, 50, 80), killAll)
+addButton("🏁 Teleport a Meta", 375, Color3.fromRGB(50, 150, 100), teleportToWin)
+
+-- Minimizar
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    menu.Visible = not minimized
+    minBtn.Text = minimized and "▲" or "▼"
+end)
+
+-- Colores animados
+task.spawn(function()
+    local hue = 0
+    while true do
+        task.wait(0.05)
+        hue = (hue + 0.005) % 1
+        title.TextColor3 = Color3.fromHSV(hue, 1, 0.8)
+        insta.TextColor3 = Color3.fromHSV(hue, 1, 0.8)
+    end
+end)
+
+notify("🦑 ABRAHAM HUB", "Script cargado | @abraham_etts")
+print("🦑 ABRAHAM HUB - Cargado")
